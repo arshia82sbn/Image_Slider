@@ -118,6 +118,8 @@ pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tessera
 - 💾 Export extracted text to file
 - 🌍 OCR over multiple images at once
 - 🧪 Add preprocessing (e.g. grayscale, thresholding) for better OCR accuracy
+  
+---
 
 ---
 
