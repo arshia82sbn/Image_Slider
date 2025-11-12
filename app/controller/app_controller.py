@@ -1,9 +1,10 @@
 from pathlib import Path
 import threading
+from PIL import Image
 from typing import Optional , Callable
 from app.core import ImageLoader , FileHelper
 from app.utils.log_manager import get_logger
-from app.core.ocr_engine import OCREngine
+from app.core.ocr_engine import OCREngine , OCREngineFactory , OCRExtractionError
 from app.utils.exceptions import FileLoadError
 
 logger = get_logger("AppController")
@@ -64,4 +65,48 @@ class AppController:
             logger.error("Next imaeg can't load:",e)
     
     def prev_image(self) ->Optional[Path]:
-        pass
+        it = self.image_loader.iterator()
+        if not it:
+            logger.error("images are empty")
+            return None
+        prev = it.prev()
+        if self.on_images_changed and prev:
+            self.on_images_changed(prev)
+        return prev
+    
+    def current_image(self)-> Optional[Path]:
+        it = self.image_loader.iterator()
+        return it.current() if it else None
+    
+    # OCR async code 
+    def extract_text_async(self,path:Path ,callback:Optional[Callable[[str],None]]=None):
+        """
+        Run OCR in backgroound and trigger on_ocr_complete
+        """
+        def worker(p:Path):
+            try:
+                logger.info("Starting OCR for %s",p)
+                image = Image.open(p)
+                text = self.ocr_engine.extract(image=image)
+                logger.info("OCR finished for %s", p)
+                if callback:
+                    callback(text)
+                if self.on_ocr_complete:
+                    self.on_ocr_complete(text)
+            except OCRExtractionError as e:
+                logger.warning(f"OCR extraction error:{e.details}")
+                if self.on_error:
+                    self.on_error(e)
+            except Exception as e:
+                logger.error("OCR failed : ",e)
+                if self.on_error:
+                    self.on_error(e)
+        
+        # ensure only onew OCR thread at a time
+        if self._ocr_thread and self._ocr_thread.is_alive():
+            logger.warning("OCR already in progress")
+            return False
+        
+        self._ocr_thread = threading.Thread(target=worker,args=(path,),daemon=True)
+        self._ocr_thread.start()
+        return True
