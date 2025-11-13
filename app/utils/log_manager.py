@@ -48,8 +48,6 @@ class LogManager:
     def get_logger(self):
         return self.logger
 
-
-# ✅ Global shortcut
 def get_logger(name="AppLogger"):
     """
     Returns a global logger instance with custom name support.

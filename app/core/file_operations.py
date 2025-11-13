@@ -20,12 +20,12 @@ class FileHelper:
     @staticmethod
     def is_image_file(path:Path)->bool:
         try:
-            return path.stuffix.lower() in FileHelper.VALID_IMAGE_EXT
+            return path.suffix.lower() in FileHelper.VALID_IMAGE_EXT
         except Exception as e:
-            logger.error()
+            logger.error("Image can not loaded")
     
     @staticmethod
-    def list_files(folder:Path,recursive:bool=-False) -> List[Path]:
+    def list_files(folder:Path,recursive:bool=-True) -> List[Path]:
         """
         Return list of files inside the folders and filters out hidden files
         """
@@ -50,7 +50,7 @@ class FileHelper:
     def ensure_dir(path:Path) -> Path:
         path = Path(path)
         path.mkdir(parents=True,exist_ok=True)
-        return Path
+        return path
     
     @staticmethod
     def resolve_path(pathlike) -> Path:

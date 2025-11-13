@@ -1,5 +1,6 @@
 import os
 import pytesseract
+from pytesseract import TesseractError
 from PIL import Image
 from app.utils.config import config
 from app.utils.log_manager import get_logger
@@ -35,6 +36,7 @@ class TesseractOCR(OCREngine):
 
         # Assign path for pytesseract
         pytesseract.pytesseract.tesseract_cmd = config.TESSERACT_CMD
+        os.environ["TESSDATA_PREFIX"] = r"C:\Program Files\Tesseract-OCR\tessdata"
         logger.debug(f"Tesseract command set to: {config.TESSERACT_CMD}")
 
     def extract(self, image: Image.Image) -> str:
@@ -45,8 +47,8 @@ class TesseractOCR(OCREngine):
         try:
             text = pytesseract.image_to_string(
                 image,
-                lang="fas+eng",  # Persian + English
-                config=config.TESSDATA_DIR
+                lang="eng+fas",
+                config=str(config.ENGINE_CONFIG)
             )
             if not text.strip():
                 logger.warning("No text found in the provided image.")
@@ -61,10 +63,6 @@ class TesseractOCR(OCREngine):
             # Handle extraction failure
             logger.exception("OCR extraction failed.")
             raise OCRExtractionError(f"OCR extraction error: {e}")
-
-        except pytesseract.TesseractLanguageError as e:
-            logger.exception("Unsupported OCR language requested.")
-            raise OCRLanguageNotSupportedError(str(e))
 
         except Exception as e:
             # General fallback

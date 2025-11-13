@@ -1,112 +1,144 @@
 from pathlib import Path
 import threading
+from typing import Optional, Callable
 from PIL import Image
-from typing import Optional , Callable
-from app.core import ImageLoader , FileHelper
+from app.core.image_loader import ImageLoader
+from app.core.ocr_engine import OCREngineFactory, OCRExtractionError
 from app.utils.log_manager import get_logger
-from app.core.ocr_engine import OCREngine , OCREngineFactory , OCRExtractionError
-from app.utils.exceptions import FileLoadError
 
 logger = get_logger("AppController")
 
+
 class AppController:
     """
-    Mediator / Controller between UI (View) and Core logic
+    Simple, practical controller (Mediator).
     Responsibilities:
-    - coordinate folder selection , image loading
-    - Expose async OCR extraction API
-    - Provide callbacks to the UI for events
+      - load images from folder (via ImageLoader)
+      - navigate next/prev
+      - run OCR in background and notify callbacks
+    Callbacks that UI can set:
+      - on_images_loaded(count: int)
+      - on_image_changed(path: Path)
+      - on_ocr_complete(text: str)
+      - on_error(exc: Exception)
     """
-    def __init__(self):
+
+    def __init__(self, ocr_engine_name: str = "tesseract"):
         self.image_loader = ImageLoader()
-        self.file_helper = FileHelper()
-        self.ocr_engine = OCREngine()
-        self._ocr_thread = Optional[threading.Thread] = None
-    
-        # Callbacks that UI can set
-        self.on_images_loaded : Optional[Callable[[int],None]] = None
-        self.on_images_changed: Optional[Callable[[Path],None]] = None
-        self.on_ocr_complete: Optional[Callable[[str],None]] = None
-        self.on_error: Optional[Callable[[Exception],None]] = None
-    
-    def load_folder(self,folder_path:Path,recursive:bool = False):
-        """
-        Load images from folder; synchronous 
-        Notify UI via on_images_loaded callback
-        """
+        self.iterator = None
+        self._ocr_thread: Optional[threading.Thread] = None
+
+        # Create OCR engine (factory) — if it fails we keep None but report via on_error
         try:
-            iterator = self.image_loader.load_from_folder(folder_path,recursive=recursive)
-            count = int(iterator)
-            logger.info("Loaded %d images",count)
+            self.ocr_engine = OCREngineFactory.create_engine(ocr_engine_name)
+            logger.info("OCR engine initialized: %s", ocr_engine_name)
+        except Exception as e:
+            self.ocr_engine = None
+            logger.exception("Failed to initialize OCR engine: %s", e)
+
+        # Callbacks (set by UI)
+        self.on_images_loaded: Optional[Callable[[int], None]] = None
+        self.on_image_changed: Optional[Callable[[Path], None]] = None
+        self.on_ocr_complete: Optional[Callable[[str], None]] = None
+        self.on_error: Optional[Callable[[Exception], None]] = None
+
+    # -------- Loading & Navigation --------
+    def load_folder(self, folder_path: Path) -> int:
+        """Load images synchronously from folder_path. Returns number loaded."""
+        try:
+            self.iterator = self.image_loader.load_from_folder(folder_path)
+            count = len(self.iterator) if self.iterator else 0
+            logger.info("Loaded %d images from %s", count, folder_path)
             if self.on_images_loaded:
-                self.on_images_loaded(count)
-                #Notify change for current image
-                current  = iterator.current()
-                if current and self.on_images_changed:
-                    self.on_images_changed(current)
-                return iterator
-        except FileLoadError as e:
-            logger.exception("Failed loading folder: %s",folder_path)
+                try:
+                    self.on_images_loaded(count)
+                except Exception as cb_e:
+                    logger.exception("on_images_loaded callback failed: %s", cb_e)
+
+            # notify about current image
+            if self.iterator and self.iterator.current() and self.on_image_changed:
+                try:
+                    self.on_image_changed(self.iterator.current())
+                except Exception as cb_e:
+                    logger.exception("on_image_changed callback failed: %s", cb_e)
+            return count
+        except Exception as e:
+            logger.exception("Error loading folder: %s", e)
             if self.on_error:
                 self.on_error(e)
             raise
-    
-    # Navigate helpers used by UI
+
     def next_image(self) -> Optional[Path]:
-        try:
-            it = self.image_loader.iterator()
-            if not it:
-                return None
-            perv = it.perv()
-            if self.on_images_changed and perv:
-                self.on_images_changed(perv)
-            return perv
-        except Exception as e:
-            logger.error("Next imaeg can't load:",e)
-    
-    def prev_image(self) ->Optional[Path]:
-        it = self.image_loader.iterator()
-        if not it:
-            logger.error("images are empty")
+        if not self.iterator:
             return None
-        prev = it.prev()
-        if self.on_images_changed and prev:
-            self.on_images_changed(prev)
-        return prev
-    
-    def current_image(self)-> Optional[Path]:
-        it = self.image_loader.iterator()
-        return it.current() if it else None
-    
-    # OCR async code 
-    def extract_text_async(self,path:Path ,callback:Optional[Callable[[str],None]]=None):
-        """
-        Run OCR in backgroound and trigger on_ocr_complete
-        """
-        def worker(p:Path):
+        nxt = self.iterator.next()
+        if nxt and self.on_image_changed:
             try:
-                logger.info("Starting OCR for %s",p)
+                self.on_image_changed(nxt)
+            except Exception as cb_e:
+                logger.exception("on_image_changed callback failed: %s", cb_e)
+        return nxt
+
+    def prev_image(self) -> Optional[Path]:
+        if not self.iterator:
+            return None
+        prev = self.iterator.prev()
+        if prev and self.on_image_changed:
+            try:
+                self.on_image_changed(prev)
+            except Exception as cb_e:
+                logger.exception("on_image_changed callback failed: %s", cb_e)
+        return prev
+
+    def current_image(self) -> Optional[Path]:
+        return self.iterator.current() if self.iterator else None
+
+    # -------- OCR (async) --------
+    def extract_text_async(self, path: Path, callback: Optional[Callable[[str], None]] = None) -> bool:
+        """
+        Start OCR in background. Returns True if started.
+        Calls `callback(text)` and `self.on_ocr_complete(text)` when finished.
+        If ocr_engine is not available, reports on_error and returns False.
+        """
+
+        if self.ocr_engine is None:
+            err = RuntimeError("OCR engine not initialized")
+            logger.error(err)
+            if self.on_error:
+                self.on_error(err)
+            return False
+
+        def worker(p: Path):
+            try:
+                logger.info("Starting OCR for %s", p)
+                # Use engine.extract(Image) — engine expects PIL.Image
                 image = Image.open(p)
-                text = self.ocr_engine.extract(image=image)
+                text = self.ocr_engine.extract(image)
                 logger.info("OCR finished for %s", p)
                 if callback:
-                    callback(text)
+                    try:
+                        callback(text)
+                    except Exception as cb_e:
+                        logger.exception("OCR callback failed: %s", cb_e)
                 if self.on_ocr_complete:
-                    self.on_ocr_complete(text)
+                    try:
+                        self.on_ocr_complete(text)
+                    except Exception as cb_e:
+                        logger.exception("on_ocr_complete callback failed: %s", cb_e)
             except OCRExtractionError as e:
-                logger.warning(f"OCR extraction error:{e.details}")
+                logger.exception("OCRExtractionError: %s", e)
                 if self.on_error:
                     self.on_error(e)
             except Exception as e:
-                logger.error("OCR failed : ",e)
+                logger.exception("Unexpected OCR failure: %s", e)
                 if self.on_error:
                     self.on_error(e)
-        
-        # ensure only onew OCR thread at a time
+
+        # Prevent concurrent OCR runs
         if self._ocr_thread and self._ocr_thread.is_alive():
-            logger.warning("OCR already in progress")
+            logger.warning("OCR already running")
             return False
-        
-        self._ocr_thread = threading.Thread(target=worker,args=(path,),daemon=True)
+
+        self._ocr_thread = threading.Thread(target=worker, args=(path,), daemon=True)
         self._ocr_thread.start()
         return True

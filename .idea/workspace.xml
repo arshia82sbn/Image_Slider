@@ -5,22 +5,24 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="977162a3-af20-4742-893c-519f58aa6940" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Image_slider.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/controler/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/controler/app_controler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/components/nav_butttons.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/ui/components/text_display.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Image_slider.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Image_slider.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/assests/icons/back.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/assests/icons/forward.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/controller/app_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/controller/app_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/core/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/core/file_operations.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/file_operations.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/core/ocr_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/core/ocr_engine.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/ui/components/nav_butttons.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/app/ui/photo_slider.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/ui/photo_slider.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/utils/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/utils/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/config.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/utils/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/exceptions.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/utils/log_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/utils/log_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mmain.py" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,18 +50,51 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.config.executor": "Run",
+    "Python.file_operations.executor": "Run",
+    "Python.main.executor": "Debug",
+    "Python.ocr_engine.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "dart.analysis.tool.window.visible": "false",
-    "git-widget-placeholder": "master",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "C:/Users/Arshia/OneDrive/Documents/programming/python/Image_slider"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Image_slider" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.main" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-d9fa9deec7cb-d902c0275401-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-252.23892.515" />
+        <option value="bundled-python-sdk-b3ae9b5d7125-f0eec537fc84-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.23892.439" />
       </set>
     </attachedChunks>
   </component>
