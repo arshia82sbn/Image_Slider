@@ -1,130 +1,153 @@
-# 🖼️ Photo Slider with OCR (Text Extraction Tool)
+# 🖼️ Image Slider App
 
-This project is a modern and user-friendly desktop application built with **CustomTkinter**, which allows users to:
-
-- 📂 **Select a folder** containing images
-- 🖼️ **Navigate through images** with next/previous buttons
-- 🔍 **Extract text** from the displayed image using Tesseract OCR (supports Persian and English)
-- 🧠 **Display the extracted text** in a clean text box
+A professional, pattern-driven Python application for managing and navigating image folders, performing OCR (text extraction), and providing a robust and extensible GUI architecture built with **CustomTkinter** and a **clean MVC design**.
 
 ---
 
-## 🚀 Features
+## 🚀 Overview
 
-| Feature             | Description                                                             |
-| ------------------- | ----------------------------------------------------------------------- |
-| 📁 Folder Selection | Select a directory and automatically load all supported image files     |
-| ⬅️➡️ Navigation     | Navigate back and forth through images in the folder                    |
-| 📸 Image Display    | View selected image in a resized format within the GUI                  |
-| 🧾 OCR Text Output  | Use Tesseract OCR to extract text from image and display it dynamically |
-| 🌐 Multilingual OCR | Persian (`fas`) and English (`eng`) text extraction supported           |
+**Image Slider** is a modular, production-ready image viewer and OCR utility built with scalability, maintainability, and clean architecture in mind. It combines a sleek graphical interface with advanced backend design principles such as:
+
+- **Singleton Log Manager** — centralized, thread-safe logging for the entire application.
+- **Abstract Factory & Strategy Patterns** — modular OCR engines (Tesseract and future integrations).
+- **MVC / MVP Hybrid Architecture** — separation of logic, presentation, and data.
+- **Exception Safety & Thread Isolation** — ensures stable async OCR execution.
+- **Configurable Components** — each module is easily replaceable and reusable.
+
+This app demonstrates **how to architect a complex Python GUI** with layered responsibility, extensibility, and minimal coupling.
 
 ---
 
-## 🧠 How the App Works (Algorithm Insight)
+## 🧩 Architecture Overview
 
-### 🔄 Initialization
+```
+app/
+├── main.py                    # Entry point with logging and graceful lifecycle
+├── controller/
+│   └── app_controller.py      # Mediator between UI and core logic (Controller)
+├── ui/
+│   ├── photo_slider.py        # Main GUI logic with async image navigation (View)
+│   ├── text_display.py        # Text output panel for OCR results
+│   ├── styles.py              # Centralized theming and UI style management
+│   └── __init__.py
+├── core/
+│   ├── ocr_engine.py          # OCR Engine (Tesseract + abstractions)
+│   ├── image_loader.py        # Iterator for managing and navigating image folders
+│   ├── file_operations.py     # Safe file I/O utilities
+│   └── __init__.py
+└── utils/
+    ├── log_manager.py         # Singleton-based global logger
+    ├── exceptions.py          # Application-wide structured exception classes
+    └── config.py              # Configurations for OCR, UI, and file behavior
+```
 
-- On start, a `CTk` window is created with fixed dimensions and icon.
-- Two navigation icons (`forward.png`, `back.png`) are loaded and attached to buttons.
+Each folder encapsulates a logical layer — **UI**, **Core**, **Controller**, **Utilities** — following a clear separation of concerns.
 
-### 📂 Image Loading
+---
 
-- When a folder is selected, all valid image extensions are filtered and stored in `self.image_list`.
-- The current image index is set to `0`, and the first image is displayed.
+## 🧠 Design Patterns Used
 
-### 🖼️ Image Display Logic
-
+### 🪞 Singleton
+Used in **LogManager** to ensure consistent logging across threads.
 ```python
-image = Image.open(image_path)
-image = image.resize((500, 400), Image.LANCZOS)
-photo = ImageTk.PhotoImage(image)
+class LogManager:
+    _instance = None
+    _lock = Lock()
 ```
 
-- Images are resized for consistency.
-- Displayed using a `CTkLabel` widget with `image` binding.
-
-### 🧾 OCR Extraction
-
+### 🏭 Factory + Strategy
+OCR engine can switch dynamically between implementations without code rewrite.
 ```python
-text = pytesseract.image_to_string(image, lang='fas+eng')
+class OCREngine:
+    def extract(self, image):
+        raise NotImplementedError()
 ```
 
-- Uses Tesseract OCR to extract both Persian and English text.
-- Output is rendered inside a `CTkTextbox`.
-
-### 🔁 Navigation Buttons
-
-- Buttons trigger `prev_image()` and `next_image()` methods.
-- Index is updated and the image display is refreshed.
+### 🧩 MVC / MVP Hybrid
+- **Model**: Core logic (OCR, ImageLoader, FileOps)
+- **View**: UI layer (PhotoSlider)
+- **Controller**: AppController bridges them cleanly
 
 ---
 
-## 📂 Folder Structure
+## ⚙️ Key Features
 
-```
-photo-slider-app/
-├── main.py                # Main application file
-├── back.png               # Back button icon
-├── forward.png            # Forward button icon
-├── images.png             # App window icon
-├── README.md              # Project documentation
-├── requirements.txt       # Required Python libraries
-```
+✅ **Image Folder Navigation**  
+Load entire folders and navigate smoothly between images with next/previous logic.
+
+✅ **Asynchronous OCR Engine**  
+Run OCR extraction without freezing the UI using thread-safe async operations.
+
+✅ **CustomTkinter GUI**  
+A dark-themed, modern interface leveraging `customtkinter` for visual polish.
+
+✅ **Robust Exception Handling**  
+Every module defines its own clear, hierarchical exception model.
+
+✅ **Logging and Monitoring**  
+All modules use the centralized, thread-safe logger with detailed file and line tracking.
+
+✅ **Extensible Design**  
+Add new OCR backends, UI components, or data processors without touching existing code.
 
 ---
 
-## 📦 Requirements
+## 🧰 Installation
 
-### 🐍 Python Libraries
-
-```txt
-customtkinter==5.2.1
-pillow==10.3.0
-pytesseract==0.3.10
-```
-
-Install all with:
-
+### Prerequisites
+- Python 3.9+
+- Tesseract OCR (installed and available in PATH)
+- Required libraries:
 ```bash
-pip install -r requirements.txt
+pip install customtkinter pillow pytesseract
 ```
 
-### 🛠️ External Dependency
-
-Make sure **Tesseract OCR** is installed and added to your system PATH:
-
-- Windows: [https://github.com/tesseract-ocr/tesseract](https://github.com/tesseract-ocr/tesseract)
-- (Optional) Uncomment and set this line if not in PATH:
-
-```python
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+### Run
+```bash
+python main.py
 ```
 
 ---
 
-## 🔍 Sample Use Case
+## 🧪 Example Use
 
-1. Launch the application
-2. Select a folder with images (`.png`, `.jpg`, `.jpeg`, `.bmp`, `.gif`)
-3. Click through images using arrows
-4. Click **Extract Text** to see the OCR result!
-
----
-
-## 💡 Future Enhancements
-
-- 🔤 Language switcher for OCR
-- 💾 Export extracted text to file
-- 🌍 OCR over multiple images at once
-- 🧪 Add preprocessing (e.g. grayscale, thresholding) for better OCR accuracy
-  
----
+1. Launch the app.
+2. Select an image folder.
+3. Use the **Next** / **Previous** buttons to navigate.
+4. Trigger **OCR extraction** to read text from current image.
+5. View extracted text in the side panel.
 
 ---
 
-## 📸 Screenshot
+## 💡 Why This Project Stands Out
 
-![Image slider](demo.gif)
+- Uses **thread-safe design** with minimal coupling.
+- Built using **industry-grade patterns**.
+- Easy to extend for machine learning OCR, language models, or translation layers.
+- Maintains **full modular independence** between GUI and backend.
+- A perfect educational example for learning **clean Python architecture**.
 
 ---
+
+## 🔮 Future Enhancements
+
+- [ ] Support for multi-language OCR dynamically.
+- [ ] Drag-and-drop folder loading.
+- [ ] PDF and document mode.
+- [ ] Cloud OCR or GPT-based post-processing.
+- [ ] Image preprocessing filters for better OCR accuracy.
+
+---
+
+## 🧑‍💻 Author
+**Arshia Saberian**  
+A passionate developer focused on Python software engineering, clean code, and scalable architectures.
+
+---
+
+## 🏁 License
+MIT License — feel free to use, modify, and learn from this repository.
+
+---
+
+### ⭐ If you found this helpful, give the repo a star — it inspires continued open-source work!
